@@ -1,0 +1,2 @@
+[functions.user-logged]
+verify_jwt = true

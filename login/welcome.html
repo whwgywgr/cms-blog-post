@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Selamat Datang</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Selamat Datang ke Laman Utama</h1>
+
+  <div id="auth-buttons">
+    <!-- Butang akan dipaparkan secara dinamik -->
+  </div>
+
+  <script type="module">
+    import { supabase } from './supabase.js';
+
+    const container = document.getElementById('auth-buttons');
+
+    // Semak status sesi pengguna
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session) {
+      // ✅ Pengguna telah login
+      const btn = document.createElement('button');
+      btn.textContent = "Pergi ke Profile";
+      btn.onclick = () => window.location.href = "profile.html";
+      container.appendChild(btn);
+    } else {
+      // ❌ Belum login - paparkan Login & Signup
+      const loginBtn = document.createElement('button');
+      loginBtn.textContent = "Login";
+      loginBtn.onclick = () => window.location.href = "login.html";
+
+      const signupBtn = document.createElement('button');
+      signupBtn.textContent = "Daftar";
+      signupBtn.onclick = () => window.location.href = "signup.html";
+
+      container.appendChild(loginBtn);
+      container.appendChild(signupBtn);
+    }
+  </script>
+</body>
+</html>

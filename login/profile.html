@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Header akan dimuatkan secara automatik -->
+  <div id="header-placeholder"></div>
+
+  <h1>Profil</h1>
+
+  <!-- Notifikasi -->
+  <div id="notification" class="hidden"></div>
+
+  <!-- Maklumat pengguna -->
+  <div id="profile-info">
+    <p><strong>Email:</strong> <span id="user-email">Memuat...</span></p>
+  </div>
+
+  <!-- Logout -->
+  <button id="logoutBtn">Logout</button>
+
+  <!-- Skrip: Supabase & Logout -->
+  <script type="module">
+    import { supabase } from './supabase.js';
+    import { showNotification } from './notification.js';
+  
+    const emailSpan = document.getElementById('user-email');
+    const logoutBtn = document.getElementById('logoutBtn');
+  
+    const { data: { session } } = await supabase.auth.getSession();
+  
+    if (!session) {
+      window.location.href = "login.html";
+    } else {
+      const email = session.user.email;
+      const user_id = session.user.id;
+      emailSpan.textContent = email;
+  
+      // ✅ 1. Simpan log ke dalam database
+      await supabase.from('login_logs').insert([{ email, user_id }]);
+  
+      // ✅ 2. Panggil Edge Function untuk proses tambahan
+      fetch('https://ahjvgboxahecmwjecldq.function.supabase.co/user-logged', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ email })
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Edge Function:", data.message);
+      })
+      .catch(err => {
+        console.error("Function error:", err.message);
+      });
+    }
+  
+    logoutBtn.addEventListener('click', async () => {
+      const { error } = await supabase.auth.signOut();
+  
+      if (error) {
+        showNotification("Gagal logout: " + error.message, "error");
+      } else {
+        showNotification("Berjaya logout!", "success");
+        setTimeout(() => {
+          window.location.href = "welcome.html";
+        }, 1500);
+      }
+    });
+  </script>
+  
+
+</body>
+</html>
